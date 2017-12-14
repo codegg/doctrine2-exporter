@@ -65,30 +65,33 @@ class Column extends BaseColumn
             $shouldTypehintProperties = $this->getConfig()->get(Formatter::CFG_PROPERTY_TYPEHINT);
             $typehint = $shouldTypehintProperties && class_exists($nativeType) ? "$nativeType " : '';
 
-            $writer
-                // setter
-                ->write('/**')
-                ->write(' * Set the value of '.$this->getColumnName().'.')
-                ->write(' *')
-                ->write(' * @param '.$nativeType.' $'.$this->getColumnName())
-                ->write(' * @return '.$table->getNamespace())
-                ->write(' */')
-                ->write('public function set'.$this->getBeautifiedColumnName().'('.$typehint.'$'.$this->getColumnName().')')
-                ->write('{')
-                ->indent()
-                    ->write('$this->'.$this->getColumnName().' = $'.$this->getColumnName().';')
+            if ($this->getColumnName() !== 'id') {
+                $writer
+                    // setter
+                    ->write('/**')
+                    ->write(' * Set the value of ' . $this->getColumnName() . '.')
+                    ->write(' *')
+                    ->write(' * @param ' . $nativeType . ' $' . $this->getColumnName())
+                    ->write(' * @return ' . $table->getNamespace())
+                    ->write(' */')
+                    ->write('public function set' . $this->getBeautifiedColumnName() . '(' . $typehint . '$' . $this->getColumnName() . ($this->getNullableValue() ? ' = null' : '') . ')')
+                    ->write('{')
+                    ->indent()
+                    ->write('$this->' . $this->getColumnName() . ' = $' . $this->getColumnName() . ';')
                     ->write('')
                     ->write('return $this;')
-                ->outdent()
-                ->write('}')
-                ->write('')
+                    ->outdent()
+                    ->write('}')
+                    ->write('');
+            }
+            $writer
                 // getter
                 ->write('/**')
                 ->write(' * Get the value of '.$this->getColumnName().'.')
                 ->write(' *')
                 ->write(' * @return '.$nativeType)
                 ->write(' */')
-                ->write('public function get'.$this->getBeautifiedColumnName().'()')
+                ->write('public function get'.$this->getBeautifiedColumnName().'(): ' . $this->nativeType2phpType($nativeType, $this->getNullableValue()))
                 ->write('{')
                 ->indent()
                     ->write('return $this->'.$this->getColumnName().';')
@@ -105,7 +108,7 @@ class Column extends BaseColumn
     {
         $attributes = array(
             'name' => ($columnName = $this->getTable()->quoteIdentifier($this->getColumnName())) !== $this->getColumnName() ? $columnName : null,
-            'type' => $this->getFormatter()->getDatatypeConverter()->getMappedType($this),
+            'type' => $this->getFormatter()->getDatatypeConverter()->getMappedType($this) === 'array' ? 'json_array' : $this->getFormatter()->getDatatypeConverter()->getMappedType($this),
         );
         if (($length = $this->parameters->get('length')) && ($length != -1)) {
             $attributes['length'] = (int) $length;
@@ -122,5 +125,25 @@ class Column extends BaseColumn
         }
 
         return $attributes;
+    }
+
+    private function nativeType2phpType($nativeType, $nullable = false)
+    {
+        $phpType = $nativeType;
+        switch ($nativeType) {
+            case 'integer':
+                $phpType = 'int';
+                break;
+
+            case 'boolean':
+                $phpType = 'bool';
+                break;
+        }
+
+        if ($phpType  && $nullable) {
+            $phpType = '?' . $phpType;
+        }
+
+        return $phpType;
     }
 }

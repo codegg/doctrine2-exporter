@@ -277,6 +277,7 @@ class Table extends BaseTable
                 })
             ->outdent()
             ->write('}')
+            ->write('')
             ->close()
         ;
         if ($extendableEntity && !$writer->getStorage()->hasFile($this->getClassFileName())) {
@@ -395,7 +396,7 @@ class Table extends BaseTable
             $uses[] = $orm;
         }
         if (count($this->getTableM2MRelations()) || count($this->getAllLocalForeignKeys())) {
-            $uses[] = $this->getCollectionClass();
+            //$uses[] = $this->getCollectionClass();
         }
 
         return $uses;
@@ -487,10 +488,10 @@ class Table extends BaseTable
     {
         // 1 <=> N references
         foreach ($this->getAllLocalForeignKeys() as $local) {
-            if ($this->isLocalForeignKeyIgnored($local)) {
+            //if ($this->isLocalForeignKeyIgnored($local)) {
                 $this->getDocument()->addLog(sprintf('  Local relation "%s" was ignored', $local->getOwningTable()->getModelName()));
                 continue;
-            }
+            //}
 
             $targetEntity = $local->getOwningTable()->getModelName();
             $targetEntityFQCN = $local->getOwningTable()->getModelNameAsFQCN($local->getReferencedTable()->getEntityNamespace());
@@ -554,7 +555,7 @@ class Table extends BaseTable
 
             $annotationOptions = array(
                 'targetEntity' => $targetEntityFQCN,
-                'inversedBy' => $foreign->isUnidirectional() ? null : lcfirst($this->getRelatedVarName($inversedBy, $related, true)),
+                'inversedBy' => $foreign->isUnidirectional() || true ? null : lcfirst($this->getRelatedVarName($inversedBy, $related, true)),
                 'cascade' => $this->getFormatter()->getCascadeOption($foreign->parseComment('cascade')),
                 'fetch' => $this->getFormatter()->getFetchOption($foreign->parseComment('fetch')),
             );
@@ -567,7 +568,7 @@ class Table extends BaseTable
                     ->write(' * '.$this->getAnnotation('ManyToOne', $annotationOptions))
                     ->write(' * '.$this->getJoins($foreign, false))
                     ->write(' */')
-                    ->write('protected $'.lcfirst($this->getRelatedVarName($targetEntity, $related)).';')
+                    ->write('protected $'.( $related ? $foreign->getLocal()->getColumnName() : lcfirst($targetEntity)).';')
                     ->write('')
                 ;
             } else {
@@ -661,6 +662,9 @@ class Table extends BaseTable
     public function writeConstructor(WriterInterface $writer)
     {
         $writer
+            ->write('/**')
+            ->write(' * ' . $this->getClassName() . ' constructor.')
+            ->write(' */')
             ->write('public function __construct()')
             ->write('{')
             ->indent()
@@ -679,9 +683,9 @@ class Table extends BaseTable
     public function writeRelationsConstructor(WriterInterface $writer)
     {
         foreach ($this->getAllLocalForeignKeys() as $local) {
-            if ($this->isLocalForeignKeyIgnored($local)) {
+            //if ($this->isLocalForeignKeyIgnored($local)) {
                 continue;
-            }
+            //}
             $this->getDocument()->addLog(sprintf('  Writing N <=> 1 constructor "%s"', $local->getOwningTable()->getModelName()));
 
             $related = $local->getForeignM2MRelatedName();
@@ -717,9 +721,9 @@ class Table extends BaseTable
     {
         // N <=> 1 references
         foreach ($this->getAllLocalForeignKeys() as $local) {
-            if ($this->isLocalForeignKeyIgnored($local)) {
+            //if ($this->isLocalForeignKeyIgnored($local)) {
                 continue;
-            }
+            //}
 
             $this->getDocument()->addLog(sprintf('  Writing setter/getter for N <=> ? "%s"', $local->getParameters()->get('name')));
 
@@ -836,10 +840,10 @@ class Table extends BaseTable
                     ->write(' * @param '.$foreign->getReferencedTable()->getNamespace().' $'.lcfirst($foreign->getReferencedTable()->getModelName()))
                     ->write(' * @return '.$this->getNamespace())
                     ->write(' */')
-                    ->write('public function set'.$this->getRelatedVarName($foreign->getReferencedTable()->getModelName(), $related).'('.$foreign->getReferencedTable()->getModelName().' $'.lcfirst($foreign->getReferencedTable()->getModelName()).' = null)')
+                    ->write('public function set'.$this->beautify(( $related ? $foreign->getLocal()->getColumnName() : lcfirst($foreign->getReferencedTable()->getModelName()))).'('.$foreign->getReferencedTable()->getModelName().' $'.lcfirst($foreign->getReferencedTable()->getModelName()).($foreign->getLocal()->getNullableValue() ? ' = null' : '').')')
                     ->write('{')
                     ->indent()
-                        ->write('$this->'.lcfirst($this->getRelatedVarName($foreign->getReferencedTable()->getModelName(), $related)).' = $'.lcfirst($foreign->getReferencedTable()->getModelName()).';')
+                        ->write('$this->'.( $related ? $foreign->getLocal()->getColumnName() : lcfirst($foreign->getReferencedTable()->getModelName())).' = $'.lcfirst($foreign->getReferencedTable()->getModelName()).';')
                         ->write('')
                         ->write('return $this;')
                     ->outdent()
@@ -851,10 +855,10 @@ class Table extends BaseTable
                     ->write(' *')
                     ->write(' * @return '.$foreign->getReferencedTable()->getNamespace())
                     ->write(' */')
-                    ->write('public function get'.$this->getRelatedVarName($foreign->getReferencedTable()->getModelName(), $related).'()')
+                    ->write('public function get'.$this->beautify(( $related ? $foreign->getLocal()->getColumnName() : lcfirst($foreign->getReferencedTable()->getModelName()))).'(): ' . ($foreign->getLocal()->getNullableValue() ? '?' : '') . $foreign->getReferencedTable()->getNamespace())
                     ->write('{')
                     ->indent()
-                        ->write('return $this->'.lcfirst($this->getRelatedVarName($foreign->getReferencedTable()->getModelName(), $related)).';')
+                        ->write('return $this->'.( $related ? $foreign->getLocal()->getColumnName() : lcfirst($foreign->getReferencedTable()->getModelName())).';')
                     ->outdent()
                     ->write('}')
                     ->write('')
