@@ -679,7 +679,6 @@ class Table extends BaseTable
                 })
             ->outdent()
             ->write('}')
-            ->write('')
         ;
 
         return $this;
@@ -744,6 +743,7 @@ class Table extends BaseTable
                     ->write(' * Add '.trim($local->getOwningTable()->getModelName().' entity '.$related_text). ' to collection (one to many).')
                     ->write(' *')
                     ->write(' * @param '.$local->getOwningTable()->getNamespace().' $'.lcfirst($local->getOwningTable()->getModelName()))
+                    ->write(' *')
                     ->write(' * @return '.$this->getNamespace())
                     ->write(' */')
                     ->write('public function add'.$this->getRelatedVarName($local->getOwningTable()->getModelName(), $related).'('.$local->getOwningTable()->getModelName().' $'.lcfirst($local->getOwningTable()->getModelName()).')')
@@ -760,6 +760,7 @@ class Table extends BaseTable
                     ->write(' * Remove '.trim($local->getOwningTable()->getModelName().' entity '.$related_text). ' from collection (one to many).')
                     ->write(' *')
                     ->write(' * @param '.$local->getOwningTable()->getNamespace().' $'.lcfirst($local->getOwningTable()->getModelName()))
+                    ->write(' *')
                     ->write(' * @return '.$this->getNamespace())
                     ->write(' */')
                     ->write('public function remove'.$this->getRelatedVarName($local->getOwningTable()->getModelName(), $related).'('.$local->getOwningTable()->getModelName().' $'.lcfirst($local->getOwningTable()->getModelName()).')')
@@ -794,6 +795,7 @@ class Table extends BaseTable
                     ->write(' * Set '.$local->getOwningTable()->getModelName().' entity (one to one).')
                     ->write(' *')
                     ->write(' * @param '.$local->getOwningTable()->getNamespace().' $'.lcfirst($local->getOwningTable()->getModelName()))
+                    ->write(' *')
                     ->write(' * @return '.$this->getNamespace())
                     ->write(' */')
                     ->write('public function set'.$local->getOwningTable()->getModelName().'('.$local->getOwningTable()->getModelName().' $'.lcfirst($local->getOwningTable()->getModelName()).' = null)')
@@ -844,10 +846,12 @@ class Table extends BaseTable
 
                 $writer
                     // setter
+                    ->write('')
                     ->write('/**')
                     ->write(' * Set '.trim($foreign->getReferencedTable()->getModelName().' entity '.$related_text).' (many to one).')
                     ->write(' *')
                     ->write(' * @param '.$foreign->getReferencedTable()->getNamespace().' $'.lcfirst($foreign->getReferencedTable()->getModelName()))
+                    ->write(' *')
                     ->write(' * @return '.$this->getNamespace())
                     ->write(' */')
                     ->write('public function set'.$this->beautify(( $related ? $foreignName : lcfirst($foreign->getReferencedTable()->getModelName()))).'('.$foreign->getReferencedTable()->getModelName().' $'.lcfirst($foreign->getReferencedTable()->getModelName()).($foreign->getLocal()->getNullableValue() ? ' = null' : '').')')
@@ -871,17 +875,18 @@ class Table extends BaseTable
                         ->write('return $this->'.( $related ? $foreignName : lcfirst($foreign->getReferencedTable()->getModelName())).';')
                     ->outdent()
                     ->write('}')
-                    ->write('')
                 ;
             } else {
                 $this->getDocument()->addLog(sprintf('  Applying setter/getter for "%s"', '1 <=> 1'));
 
                 $writer
                     // setter
+                    ->write('')
                     ->write('/**')
                     ->write(' * Set '.$foreign->getReferencedTable()->getModelName().' entity (one to one).')
                     ->write(' *')
                     ->write(' * @param '.$foreign->getReferencedTable()->getNamespace().' $'.lcfirst($foreign->getReferencedTable()->getModelName()))
+                    ->write(' *')
                     ->write(' * @return '.$this->getNamespace())
                     ->write(' */')
                     ->write('public function set'.$foreign->getReferencedTable()->getModelName().'('.$foreign->getReferencedTable()->getModelName().' $'.lcfirst($foreign->getReferencedTable()->getModelName()).')')
@@ -905,7 +910,6 @@ class Table extends BaseTable
                         ->write('return $this->'.lcfirst($foreign->getReferencedTable()->getModelName()).';')
                     ->outdent()
                     ->write('}')
-                    ->write('')
                 ;
             }
         }
@@ -924,6 +928,7 @@ class Table extends BaseTable
                 ->write(' * Add '.$relation['refTable']->getModelName().' entity to collection.')
                 ->write(' *')
                 ->write(' * @param '. $relation['refTable']->getNamespace().' $'.lcfirst($relation['refTable']->getModelName()))
+                ->write(' *')
                 ->write(' * @return '.$this->getNamespace($this->getModelName()))
                 ->write(' */')
                 ->write('public function add'.$relation['refTable']->getModelName().'('.$relation['refTable']->getModelName().' $'.lcfirst($relation['refTable']->getModelName()).')')
@@ -944,6 +949,7 @@ class Table extends BaseTable
                 ->write(' * Remove '.$relation['refTable']->getModelName().' entity from collection.')
                 ->write(' *')
                 ->write(' * @param '. $relation['refTable']->getNamespace().' $'.lcfirst($relation['refTable']->getModelName()))
+                ->write(' *')
                 ->write(' * @return '.$this->getNamespace($this->getModelName()))
                 ->write(' */')
                 ->write('public function remove'.$relation['refTable']->getModelName().'('.$relation['refTable']->getModelName().' $'.lcfirst($relation['refTable']->getModelName()).')')

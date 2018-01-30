@@ -65,6 +65,9 @@ class Column extends BaseColumn
             $shouldTypehintProperties = $this->getConfig()->get(Formatter::CFG_PROPERTY_TYPEHINT);
             $typehint = $shouldTypehintProperties && class_exists($nativeType) ? "$nativeType " : '';
 
+            $writer
+                ->write('')
+            ;
             if ($this->getColumnName() !== 'id') {
                 $writer
                     // setter
@@ -72,6 +75,7 @@ class Column extends BaseColumn
                     ->write(' * Set the value of ' . $this->getColumnName() . '.')
                     ->write(' *')
                     ->write(' * @param ' . $nativeType . ' $' . $this->getColumnName())
+                    ->write(' *')
                     ->write(' * @return ' . $table->getNamespace())
                     ->write(' */')
                     ->write('public function set' . $this->getBeautifiedColumnName() . '(' . $typehint . '$' . $this->getColumnName() . ($this->getNullableValue() ? ' = null' : '') . ')')
@@ -82,7 +86,8 @@ class Column extends BaseColumn
                     ->write('return $this;')
                     ->outdent()
                     ->write('}')
-                    ->write('');
+                    ->write('')
+                ;
             }
             $writer
                 // getter
@@ -97,7 +102,6 @@ class Column extends BaseColumn
                     ->write('return $this->'.$this->getColumnName().';')
                 ->outdent()
                 ->write('}')
-                ->write('')
             ;
         }
 
