@@ -349,6 +349,11 @@ class Table extends BaseTable
      */
     protected function getClassToExtend()
     {
+        $extendsClass = $this->parseComment('extendsClass');
+        if ($extendsClass) {
+            return " extends $extendsClass";
+        }
+
         $class = $this->getConfig()->get(Formatter::CFG_EXTENDS_CLASS);
         if(empty($class)) {
             return '';
