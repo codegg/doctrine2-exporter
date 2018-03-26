@@ -144,7 +144,7 @@ class Column extends BaseColumn
                 break;
         }
 
-        if ($phpType) {
+        if ($phpType  && $nullable) {
             $phpType = '?' . $phpType;
         }
 
