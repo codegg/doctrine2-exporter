@@ -403,6 +403,12 @@ class Table extends BaseTable
         if (count($this->getTableM2MRelations()) || count($this->getAllLocalForeignKeys())) {
             //$uses[] = $this->getCollectionClass();
         }
+        foreach ($this->getColumns() as $col) {
+            if (false !== strpos($col->getComment(), '@Assert\\')) {
+                $uses[] = 'Symfony\Component\Validator\Constraints as Assert';
+                break;
+            }
+        }
 
         return $uses;
     }
