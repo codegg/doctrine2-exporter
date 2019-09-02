@@ -78,7 +78,7 @@ class Table extends BaseTable
     public function addPrefix($annotation = null)
     {
         if (null === $this->ormPrefix) {
-            $this->ormPrefix = '@'.$this->getConfig()->get(Formatter::CFG_ANNOTATION_PREFIX);
+            $this->ormPrefix = '@ORM\\';
         }
 
         return $this->ormPrefix.($annotation ? $annotation : '');
@@ -378,35 +378,41 @@ class Table extends BaseTable
     }
 
     /**
-     * Get the use class for ORM if applicable.
-     *
-     * @return string
-     */
-    protected function getOrmUse()
-    {
-        if ('@ORM\\' === $this->addPrefix()) {
-            return 'Doctrine\ORM\Mapping as ORM';
-        }
-    }
-
-    /**
      * Get used classes.
      *
      * @return array
      */
     protected function getUsedClasses()
     {
-        $uses = array();
-        if ($orm = $this->getOrmUse()) {
-            $uses[] = $orm;
-        }
-        if (count($this->getTableM2MRelations()) || count($this->getAllLocalForeignKeys())) {
-            //$uses[] = $this->getCollectionClass();
-        }
+        $prefixes = $this->getConfig()->get(Formatter::CFG_ANNOTATION_PREFIX);
+
+        $uses = [];
+        $uses[] = $prefixes['ORM'];
+
+        $uses = array_merge($uses, $this->findUsesInComment($this->parameters->get('comment'), $prefixes));
+
         foreach ($this->getColumns() as $col) {
-            if (false !== strpos($col->getComment(), '@Assert\\')) {
-                $uses[] = 'Symfony\Component\Validator\Constraints as Assert';
-                break;
+            $uses = array_merge($uses, $this->findUsesInComment($col->getComment(), $prefixes));
+        }
+
+        return array_unique($uses);
+    }
+
+    /**
+     * @param string $comment
+     * @param array $prefixes
+     *
+     * @return array
+     */
+    protected function findUsesInComment($comment, $prefixes)
+    {
+        $uses = [];
+
+        if (preg_match_all('/@([a-zA-Z0-9_]+)\\\\/', $comment, $matches)) {
+            foreach ($matches[1] as $key) {
+                if (array_key_exists($key, $prefixes)) {
+                    $uses[] = $prefixes[$key];
+                }
             }
         }
 
@@ -447,7 +453,7 @@ class Table extends BaseTable
     public function writeExtendedUsedClasses(WriterInterface $writer)
     {
         $uses = array();
-        if ($orm = $this->getOrmUse()) {
+        if ($orm = $this->getConfig()->get(Formatter::CFG_ANNOTATION_PREFIX)['ORM']) {
             $uses[] = $orm;
         }
         $uses[] = sprintf('%s\%s', $this->getEntityNamespace(), $this->getClassName(true));
@@ -579,8 +585,10 @@ class Table extends BaseTable
                     $foreignName = substr($foreignName, 0, -3);
                 }
 
+                $comment = $foreign->getLocal()->getComment();
                 $writer
                     ->write('/**')
+                    ->writeIf($comment, $comment)
                     ->write(' * '.$this->getAnnotation('ManyToOne', $annotationOptions))
                     ->write(' * '.$this->getJoins($foreign, false))
                     ->write(' */')
