@@ -873,7 +873,7 @@ class Table extends BaseTable
                     ->write(' *')
                     ->write(' * @return '.$this->getNamespace())
                     ->write(' */')
-                    ->write('public function set'.$this->beautify(( $related ? $foreignName : lcfirst($foreign->getReferencedTable()->getModelName()))).'('.$foreign->getReferencedTable()->getModelName().' $'.lcfirst($foreign->getReferencedTable()->getModelName()).($foreign->getLocal()->getNullableValue() ? ' = null' : '').')')
+                    ->write('public function set'.$this->beautify(( $related ? $foreignName : lcfirst($foreign->getReferencedTable()->getModelName()))).'('.$foreign->getReferencedTable()->getNamespace().' $'.lcfirst($foreign->getReferencedTable()->getModelName()).($foreign->getLocal()->getNullableValue() ? ' = null' : '').')')
                     ->write('{')
                     ->indent()
                         ->write('$this->'.( $related ? $foreignName : lcfirst($foreign->getReferencedTable()->getModelName())).' = $'.lcfirst($foreign->getReferencedTable()->getModelName()).';')
