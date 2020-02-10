@@ -37,6 +37,10 @@ class Column extends BaseColumn
     {
         if (!$this->isIgnored()) {
             $comment = $this->getComment();
+
+            $converter = $this->getFormatter()->getDatatypeConverter();
+            $nativeType = $converter->getNativeType($converter->getMappedType($this));
+
             $writer
                 ->write('/**')
                 ->writeIf($comment, $comment)
@@ -46,7 +50,7 @@ class Column extends BaseColumn
                 ->writeIf($this->isAutoIncrement(),
                         ' * '.$this->getTable()->getAnnotation('GeneratedValue', array('strategy' => strtoupper($this->getConfig()->get(Formatter::CFG_GENERATED_VALUE_STRATEGY)))))
                 ->write(' */')
-                ->write('protected $'.$this->getColumnName(). ($this->getDefaultValue() !== null ? ' = ' . $this->getDefaultValue() : '') . ';')
+                ->write('protected $'.$this->getColumnName(). ($this->getDefaultValue() !== null ? ' = ' . ($nativeType === 'boolean' ? ($this->getDefaultValue() ? 'true' : 'false') : $this->getDefaultValue()) : '') . ';')
                 ->write('')
             ;
         }
@@ -58,7 +62,7 @@ class Column extends BaseColumn
     {
         if (!$this->isIgnored()) {
             $this->getDocument()->addLog(sprintf('  Writing setter/getter for column "%s"', $this->getColumnName()));
-    
+
             $table = $this->getTable();
             $converter = $this->getFormatter()->getDatatypeConverter();
             $nativeType = $converter->getNativeType($converter->getMappedType($this));
