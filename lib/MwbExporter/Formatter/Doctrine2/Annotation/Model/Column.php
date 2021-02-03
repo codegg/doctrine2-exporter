@@ -40,19 +40,41 @@ class Column extends BaseColumn
 
             $converter = $this->getFormatter()->getDatatypeConverter();
             $nativeType = $converter->getNativeType($converter->getMappedType($this));
+            $defaultValue = $this->getDefaultValue();
+
+            switch ($nativeType) {
+                case 'boolean':
+                    $defaultValue = $defaultValue ? 'true' : 'false';
+                    break;
+
+                case 'array':
+                    if (substr($defaultValue, 0, 1) === '\'' && substr($defaultValue, -1, 1) === '\'') {
+                        $defaultValue = substr($defaultValue, 1, -1);
+                    }
+                    break;
+
+                case 'float':
+                    if (strpos((string)$defaultValue, '.') === false) {
+                        $defaultValue = $defaultValue . '.0';
+                    }
+                    break;
+            }
 
             $writer
                 ->write('/**')
                 ->writeIf($comment, $comment)
-                ->writeIf($this->isPrimary,
-                        ' * '.$this->getTable()->getAnnotation('Id'))
+                ->writeIf(
+                    $this->isPrimary,
+                    ' * '.$this->getTable()->getAnnotation('Id')
+                )
                 ->write(' * '.$this->getTable()->getAnnotation('Column', $this->asAnnotation()))
-                ->writeIf($this->isAutoIncrement(),
-                        ' * '.$this->getTable()->getAnnotation('GeneratedValue', array('strategy' => strtoupper($this->getConfig()->get(Formatter::CFG_GENERATED_VALUE_STRATEGY)))))
+                ->writeIf(
+                    $this->isAutoIncrement(),
+                    ' * '.$this->getTable()->getAnnotation('GeneratedValue', array('strategy' => strtoupper($this->getConfig()->get(Formatter::CFG_GENERATED_VALUE_STRATEGY))))
+                )
                 ->write(' */')
-                ->write('protected $'.$this->getColumnName(). ($this->getDefaultValue() !== null ? ' = ' . ($nativeType === 'boolean' ? ($this->getDefaultValue() ? 'true' : 'false') : $this->getDefaultValue()) : '') . ';')
-                ->write('')
-            ;
+                ->write('protected $'.$this->getColumnName().($this->getDefaultValue() !== null ? ' = ' . $defaultValue : '') . ';')
+                ->write('');
         }
 
         return $this;
@@ -85,7 +107,7 @@ class Column extends BaseColumn
                     ->write('public function set' . $this->getBeautifiedColumnName() . '(' . $typehint . '$' . $this->getColumnName() . ($this->getNullableValue() ? ' = null' : '') . ')')
                     ->write('{')
                     ->indent()
-                    ->write('$this->' . $this->getColumnName() . ' = $' . $this->getColumnName() . ';')
+                    ->write('$this->'.$this->getColumnName().' = '.(in_array($nativeType ,['float', 'integer', 'boolean']) ? '('.$nativeType.')':'').' $'.$this->getColumnName().';')
                     ->write('')
                     ->write('return $this;')
                     ->outdent()
