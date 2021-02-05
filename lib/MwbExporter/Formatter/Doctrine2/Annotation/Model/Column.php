@@ -107,7 +107,7 @@ class Column extends BaseColumn
                     ->write('public function set' . $this->getBeautifiedColumnName() . '(' . $typehint . '$' . $this->getColumnName() . ($this->getNullableValue() ? ' = null' : '') . ')')
                     ->write('{')
                     ->indent()
-                    ->write('$this->'.$this->getColumnName().' = '.(in_array($nativeType ,['float', 'integer', 'boolean']) ? '('.$nativeType.')':'').' $'.$this->getColumnName().';')
+                    ->write('$this->'.$this->getColumnName().' = '.(in_array($nativeType ,['float', 'integer', 'boolean']) ? ($this->getNullableValue() ? '(null === $'.$this->getColumnName().') ? null : ' : '').'('.$nativeType.')':'').' $'.$this->getColumnName().';')
                     ->write('')
                     ->write('return $this;')
                     ->outdent()
@@ -125,7 +125,7 @@ class Column extends BaseColumn
                 ->write('public function get'.$this->getBeautifiedColumnName().'(): ' . $this->nativeType2phpType($nativeType, $this->getNullableValue()))
                 ->write('{')
                 ->indent()
-                    ->write('return $this->'.$this->getColumnName().';')
+                ->write('return $this->'.$this->getColumnName().';')
                 ->outdent()
                 ->write('}')
             ;
